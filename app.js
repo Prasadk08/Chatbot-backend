@@ -7,7 +7,12 @@ import multer from "multer"
 import { answerQuestion, processFileAndStoreVectors } from "./rag.js"
 const app = express()
 
-app.use(cors())
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://chatbot-frontend-vlwr.vercel.app/"],
+    credentials: true,
+  })
+);
 dotenv.config()
 app.use(express.json())
 
