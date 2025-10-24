@@ -9,7 +9,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://chatbot-frontend-vlwr.vercel.app/"],
+    origin: ["http://localhost:5173", "https://chatbot-frontend-vlwr.vercel.app"],
     credentials: true,
   })
 );
