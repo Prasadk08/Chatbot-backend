@@ -13,6 +13,8 @@ app.use(
     credentials: true,
   })
 );
+
+
 dotenv.config()
 app.use(express.json())
 
@@ -27,9 +29,6 @@ app.use(express.json())
 
 
 const port= 8080
-app.use(cors({
-    origin:"http://localhost:5173"
-}))
 
 const upload = multer({dest:"uploads/"})
 
