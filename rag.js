@@ -62,46 +62,50 @@ export async function answerQuestion(question) {
   try {
     if (!vectorStore) return false;
 
-    // await db.read();
-    // const chat = db.data.chats.find(c => c.id === req.params.id);
-
-    // chat.messages.push({ id: nanoid(), role:user, text: question });
-    // await db.write();
-
-    const retriever = vectorStore.asRetriever(1);
+    // Retrieve relevant PDF content
+    const retriever = vectorStore.asRetriever(2);
     const retrievedDocuments = await retriever.invoke(question);
 
-    if (!retrievedDocuments || retrievedDocuments.length === 0) {
-      return "I couldn't find anything related to your question in the file.";
+    let contextText = "";
+    if (retrievedDocuments && retrievedDocuments.length > 0) {
+      contextText = retrievedDocuments.map((r) => r.pageContent).join("\n\n");
     }
 
-    const contextText = retrievedDocuments
-      .map((r) => r.pageContent)
-      .join("\n\n");
+    // Convert chat history into readable format
+    const chatContext = history
+      .map((msg) => `${msg.role === "user" ? "User" : "Bot"}: ${msg.text}`)
+      .join("\n");
 
-    // Google Gemini LLM
-    const llm = new ChatGoogleGenerativeAI({
-      apiKey: process.env.API_KEY,
-      model: "gemini-2.5-flash",
-      temperature: 0,
-    });
-
+    // Create prompt with both chat history + PDF content
     const prompt = `
-Use the following context to answer the question strictly.
-If the answer is not in the context, reply: "I couldn't find anything related to your question in the file."
+You are a helpful assistant answering based on both the conversation history and PDF context.
 
-Context:
-${contextText}
+If the user's question refers to something mentioned earlier in the chat (like "previous question"), use the chat history to answer.
 
-Question:
+If the question refers to content in the uploaded file, use the PDF context.
+
+If neither contains relevant info, reply: "I couldn't find anything related to your question in the file."
+
+---
+Chat History:
+${chatContext || "No previous chat history"}
+
+PDF Context:
+${contextText || "No context found"}
+
+User Question:
 ${question}
 `;
 
+    const llm = new ChatGoogleGenerativeAI({
+      apiKey: process.env.API_KEY,
+      model: "gemini-2.5-flash",
+      temperature: 0.2,
+    });
+
     const answer = await llm.invoke(prompt);
-    
-    // chat.messages.push({ id: nanoid(), role:bot, text: answer.content });
-    // await db.write();
     return answer.content;
+
   } catch (err) {
     console.error("Error in answerQuestion:", err.message);
     return "Something went wrong while answering the question.";

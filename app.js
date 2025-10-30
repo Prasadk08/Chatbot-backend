@@ -37,7 +37,7 @@ app.post("/upload",upload.single("file"),async(req,res)=>{
     try{
         const file = req.file.path
         await processFileAndStoreVectors(file)
-        res.json({ message: "File processed successfully ✅"});
+        res.json({ message: "File processed successfully"});
     }catch(e){
         console.log(e)
         res.status(500).json({error:"Something Went Wrong"})
@@ -47,19 +47,21 @@ app.post("/upload",upload.single("file"),async(req,res)=>{
 })
 
 app.post("/ask",async(req,res)=>{
-    try{
-        let question = req.body.question
-        const answer = await answerQuestion(question)
-        if(answer){
-            res.status(201).json({answer})
-            return
-        }
-        res.status(202).json({message:"Upload the File First"})
+   try {
+    const { question, history } = req.body;
 
-    }catch(e){
-        console.log(e)
-        res.status(500).json({error:"Something Went Wrong"})
+    const answer = await answerQuestion(question, history);
+
+    if (answer) {
+      res.status(201).json({ answer });
+      return;
     }
+
+    res.status(202).json({ message: "Upload the File First" });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: "Something Went Wrong" });
+  }
 
 })
 
