@@ -58,7 +58,7 @@ export async function processFileAndStoreVectors(file) {
 }
 
 // 2️⃣ Answer user question using RAG
-export async function answerQuestion(question) {
+export async function answerQuestion(question,history=[]) {
   try {
     if (!vectorStore) return false;
 
